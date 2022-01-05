@@ -40,7 +40,7 @@ ren "%steamappsdir%\GTFO" "GTFOx"
 ren "%steamappsdir%\GTFO%rundown%" "GTFO"
 
 rem // Inform the user to run GTFO by steam as usual
-echo Done! You can start GTFO as usual by stream.
+echo Done! You can start GTFO as usual by steam.
 
 rem // Wait for game
 :wait
