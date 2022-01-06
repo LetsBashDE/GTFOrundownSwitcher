@@ -1,48 +1,96 @@
 @echo off
-rem ///////////////////////////////////////////////////////
-rem //  GTFO Launcher 1.0
-rem //  Autor: LetsBash.de
-rem //  05.01.2022
-rem ///////////////////////////////////////////////////////
 
-rem ///////////////////////////////////////////////////////
-rem // Things you have to audjust based on your PC
-rem // Dinge die du für deinen PC ändern solltest
-rem ///////////////////////////////////////////////////////
+rem Autor:        LetsBash.de
+rem Date:         06.01.2021
 
-rem // Wo sind deine Steam Spiele zu finden - einfach "D:\SteamLibrary\steamapps\common" ersetzten
-set "steamappsdir=D:\SteamLibrary\steamapps\common"
+rem Warranty:     This script comes without any warranty and in the state as it is.
 
-rem // Welche rundowns stehen zur verfügung - außer dem Aktuellen
-set "rundowns=12345"
+rem Installation: You basicly need the backups of your gtfo game folders in your steam
+rem               "steamapps\common" folder named like "GTFO + Number of the rundown". 
+rem
+rem               For Example: GTFO1 for Rundown 1, GTFO2 for Rundown 2, ...and so on
+rem                            ...up to the latest rundown named GTFO without a number
+rem
+rem               Again: If you have all Rundowns then you should have this Game folders
+rem               in your "steamapps\common" folder: GTFO, GTFO1, GTFO2, GTFO3, GTFO4 and GTFO5in your
+rem
+rem               After you have placed your rundown folders in your your "steamapps\common" folder
+rem               you have to define below the path to your "steamapps\common" folder.
 
-rem ///////////////////////////////////////////////////////
-rem // Do not change below
-rem // Ab hier nichts mehr ändern
-rem ///////////////////////////////////////////////////////
+rem How to use:   1. Launch this scriptfile and leave the window open. 
+rem                  (Window should say run game by steam)
+rem               2. Launch the game by steam
+rem               3. Play your rundown
+rem               4. Exit GTFO as usual and let the window of this script still open
+rem               5. The script detects automaticly that you closed the window and will 
+rem                  cleanup any folder renamings
 
-rem // Define your settings folder for GTFO (defined by the game)
-set "gtfoappdata=%userprofile%\appdata\LocalLow\10 Chambers Collective"
+rem ** Edit this line and set the path to your "steamapps\common" directory **
+set "steamcommon=D:\SteamLibrary\steamapps\common"
 
-rem // Get the rundown from user
-CHOICE /C %rundowns% /M "Welchen Rundown moechtest du Spielen?"
+:main
+echo.
+echo Bashys GTFO Rundown Switcher by LetsBash.de
+echo -------------------------------------------
+echo.
+set "myappdata=%userprofile%\appdata\LocalLow\10 Chambers Collective"
+
+:CheckCleanShutdown
+if exist "%steamcommon%\GTFOx" goto RepairNeeded
+goto RundownSelection
+
+:RepairNeeded
+echo EN Warning: Unclean Shutdown detected... try to recover folderstructure!
+echo DE Warnung: Script wurde nicht sauber beendet... versuche Ordner korrekt zu benennen!
+echo.
+if exist "%steamcommon%\GTFO\rundownbackupid.cmd" call "%steamcommon%\GTFO\rundownbackupid.cmd"
+if not exist "%steamcommon%\GTFO\rundownbackupid.cmd" goto RepairFailed
+ren "%steamcommon%\GTFO" "GTFO%rundownbackupid%" 1>nul 2>nul
+ren "%steamcommon%\GTFOx" "GTFO" 1>nul 2>nul
+ren "%myappdata%\GTFO" "GTFO%rundownbackupid%" 1>nul 2>nul
+ren "%myappdata%\GTFOx" "GTFO" 1>nul 2>nul
+goto RundownSelection
+
+:RepairFailed
+echo EN Error:  Repair not possible - not enough informations avalible
+echo DE Fehler: Reperatur nicht moeglich - Zu wenig Informationen verfuegbar
+echo.
+goto end
+
+:RundownSelection
+echo EN Select:  Select the rundown you want to play (do not type in the current rundown)
+echo DE Auswahl: Waehre den Rundown, den du spielen moechtest (alle ausser dem aktuellen Rundown)
+CHOICE /C 123456789 /N /M "Rundown:"
 set "rundown=%ERRORLEVEL%"
+echo.
+if not exist "%steamcommon%\GTFO%rundown%" goto RundownNotPresent
+goto RundownPrepare
 
-rem // Check if rundown is present
-if not exist "%steamappsdir%\GTFO%rundown%" goto rundownerror
+:RundownNotPresent
+echo EN Error:  Folder GTFO%rundown% is not avalible in "steamapps"
+echo DE Fehler: Ordner GTFO%rundown% ist nicht in "steamapps" verfuegbar
+echo Path: %steamcommon%\GTFO%rundown%
+timeout /t 4 1>nul 2>nul
+echo.
+goto RundownSelection
 
-rem // Rename Settingsfolder
-ren "%gtfoappdata%\GTFO" "GTFOx"
-if exist "%gtfoappdata%\GTFO%rundown%" ren "%gtfoappdata%\GTFO%rundown%" "GTFO"
+:RundownPrepare
+echo EN Action: Renaming Gamefolders and Createing Backup ID
+echo DE Aktion: Ordner werden umbenannt und Sicherungs-ID wird erstellt
+echo.
+echo set "rundownbackupid=%rundown%">"%steamcommon%\GTFO%rundown%\rundownbackupid.cmd"
+ren "%myappdata%\GTFO" "GTFOx" 1>nul 2>nul
+if not exist "%myappdata%\GTFOx" goto RenameError
+ren "%myappdata%\GTFO%rundown%" "GTFO" 1>nul 2>nul
+ren "%steamcommon%\GTFO" "GTFOx" 1>nul 2>nul
+if not exist "%steamcommon%\GTFOx" goto RenameError
+ren "%steamcommon%\GTFO%rundown%" "GTFO" 1>nul 2>nul
 
-rem // Rename Gamefolder
-ren "%steamappsdir%\GTFO" "GTFOx"
-ren "%steamappsdir%\GTFO%rundown%" "GTFO"
+:RundownReady
+echo EN Success: Start GTFO by Steam as usual
+echo DE Erfolg:  Starte GTFO ueber Steam wie gewoehnlich
+echo.
 
-rem // Inform the user to run GTFO by steam as usual
-echo Done! You can start GTFO as usual by steam.
-
-rem // Wait for game
 :wait
 timeout /t 5 1> nul 2>nul
 tasklist /FI "IMAGENAME eq GTFO.exe" | find /i "GTFO.exe" 1>nul 2>nul
@@ -57,22 +105,20 @@ timeout /t 10 1> nul 2>nul
 tasklist /FI "IMAGENAME eq GTFO.exe" | find /i "GTFO.exe" 1>nul 2>nul
 if %ERRORLEVEL% LSS 1 goto scan
 
-rem // Rename Settingsfolder back to origin
-ren "%gtfoappdata%\GTFO" "GTFO%rundown%"
-ren "%gtfoappdata%\GTFOx" "GTFO"
-
-rem // Rename Gamefolder back to origin
-ren "%steamappsdir%\GTFO" "GTFO%rundown%"
-ren "%steamappsdir%\GTFOx" "GTFO"
-
-rem // End of execution
+:BacktoOrigin
+echo EN Action: Renaming Gamefolders back to origin
+echo DE Aktion: Ordner werden auf ursprung umbenannt
+echo.
+ren "%myappdata%\GTFO" "GTFO%rundown%"
+ren "%myappdata%\GTFOx" "GTFO"
+ren "%steamcommon%\GTFO" "GTFO%rundown%"
+ren "%steamcommon%\GTFOx" "GTFO"
 goto end
 
-:rundownerror
-echo ERROR: Rundown does not exist
+:RenameError
+echo EN Error:  Skript can not rename folders - Please logoff and logon
+echo DE Fehler: Das Skript kann die Ornder nicht umbennen - Bitte abmelden und wieder anmelden.
+echo.
 
 :end
 timeout /t 15
-
-
-
