@@ -12,7 +12,7 @@ Again: If you have all Rundowns then you should have this Game folders
 in your "steamapps\common" folder: GTFO, GTFO1, GTFO2, GTFO3, GTFO4 and GTFO5in your
 
 After you have placed your rundown folders in your your "steamapps\common" folder
-you have to define below the path to your "steamapps\common" folder.
+you have to define the path to your "steamapps\common" folder in the script.
 
 ## How to use
 1. Launch this scriptfile and leave the window open. 
